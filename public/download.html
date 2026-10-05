@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your download — First Flake Workbook</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
+</head>
+<body>
+<header><div class="wrap"><a class="brand" href="/">FIRST <span>FLAKE</span></a></div></header>
+<main class="wrap">
+<div class="box" id="ok" hidden>
+  <p class="ok">✓ Payment confirmed. Thank you!</p>
+  <h2 style="margin-top:0">Your workbook is ready</h2>
+  <p>Click below to download your PDF. Save it somewhere safe, then print the log pages and the Creek Card.</p>
+  <a class="btn" id="dl" href="#">Download the Workbook (PDF)</a>
+  <p class="muted">This link works for 24 hours. Download now or bookmark this page. If anything goes wrong, reply to your PayPal receipt email and we'll help.</p>
+  <hr style="border:0;border-top:1px solid var(--line);margin:24px 0">
+  <p><b>First step tonight:</b> read "A Letter from Josie" on page 3, then score yourself on page 5. Trip 1 happens in your bathtub, so you can start this weekend.</p>
+</div>
+<div class="box" id="bad" hidden>
+  <p class="err">This download link is missing, expired, or invalid.</p>
+  <p>If you already paid, reply to your PayPal receipt email with your order details and we'll send a fresh link. Otherwise, <a href="checkout.html">get the workbook here</a>.</p>
+</div>
+</main>
+<footer><div class="wrap">© 2026 First Flake</div></footer>
+<script>
+var t=new URLSearchParams(location.search).get('t');
+if(t){document.getElementById('dl').href='/api/download?t='+encodeURIComponent(t);document.getElementById('ok').hidden=false;}
+else{document.getElementById('bad').hidden=false;}
+</script>
+</body>
+</html>

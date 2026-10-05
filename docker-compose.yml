@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - APP_SECRET=${APP_SECRET}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - DB_PATH=/app/data/app.db
+    volumes:
+      - firstflake-data:/app/data
+volumes:
+  firstflake-data:

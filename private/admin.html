@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>First Flake — Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:,">
+<style>
+:root{--ink:#1f1a14;--mud:#6b5a44;--gold:#c9961a;--gold-d:#9c7210;--cream:#faf6ee;--paper:#fff;--line:#e6dccb;--ok:#2e7d32;--err:#b3261e}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--cream);color:var(--ink)}
+header{background:var(--paper);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;align-items:center;gap:20px}
+header b span{color:var(--gold)}nav a{margin-right:14px;color:var(--mud);text-decoration:none;cursor:pointer}nav a.on{color:var(--ink);font-weight:700;border-bottom:2px solid var(--gold)}
+header .r{margin-left:auto}
+main{max-width:1100px;margin:0 auto;padding:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:16px}
+.card small{color:var(--mud);text-transform:uppercase;letter-spacing:.08em;font-size:11px}.card .v{font-size:26px;font-weight:700}.card .n{color:var(--mud);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--paper);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:top}th{background:#f3ecdd;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mud)}
+.tag{padding:2px 8px;border-radius:10px;font-size:12px;font-weight:700}.paid{background:#e4f3e5;color:var(--ok)}.refunded{background:#fde8e6;color:var(--err)}.failed{background:#eee;color:#555}
+button,.btn{background:var(--gold);color:#fff;border:0;border-radius:5px;padding:7px 12px;font-weight:700;cursor:pointer;font-size:13px}button:hover{background:var(--gold-d)}
+button.ghost{background:transparent;color:var(--mud);border:1px solid var(--line)}button.ghost:hover{background:#f3ecdd}
+input,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:5px;font:inherit;background:#fff}
+label{display:block;font-size:13px;color:var(--mud);margin:10px 0 4px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.form h3{grid-column:1/-1;margin:18px 0 0;border-bottom:1px solid var(--line);padding-bottom:6px}
+.bar{display:flex;gap:10px;align-items:center;margin-bottom:12px}.bar input{max-width:320px}
+.msg{margin:10px 0;font-size:14px}.ok{color:var(--ok)}.err{color:var(--err)}
+#login{max-width:340px;margin:80px auto;background:var(--paper);padding:28px;border:1px solid var(--line);border-radius:8px}
+.chart{display:flex;align-items:flex-end;gap:3px;height:80px;margin-top:8px}.chart i{flex:1;background:var(--gold);min-height:2px;border-radius:2px 2px 0 0}
+.hide{display:none}.mono{font-family:ui-monospace,monospace;font-size:12px}
+@media(max-width:700px){.form{grid-template-columns:1fr}td:nth-child(5),th:nth-child(5){display:none}}
+</style>
+</head>
+<body>
+<div id="login">
+  <h2 style="margin-top:0">First <span style="color:var(--gold)">Flake</span> Admin</h2>
+  <label>Password</label><input type="password" id="pw" autofocus>
+  <p class="msg err" id="lmsg"></p>
+  <button id="lbtn" style="width:100%">Sign in</button>
+</div>
+
+<div id="app" class="hide">
+<header><b>FIRST <span>FLAKE</span></b>
+  <nav><a data-v="orders" class="on">Orders</a><a data-v="settings">Settings</a></nav>
+  <div class="r"><a href="/" target="_blank" style="color:var(--mud);margin-right:14px;font-size:13px">View site ↗</a><button class="ghost" id="logout">Log out</button></div>
+</header>
+<main>
+  <div id="v-orders">
+    <div class="cards" id="cards"></div>
+    <div class="bar"><input id="q" placeholder="Search email, name, or PayPal order ID"><button class="ghost" id="refresh">Refresh</button></div>
+    <p class="msg" id="omsg"></p>
+    <div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th><th>PayPal ID</th><th>Email</th><th>DL</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="bar" style="margin-top:10px"><button class="ghost" id="prev">‹ Prev</button><span id="pg">1</span><button class="ghost" id="next">Next ›</button></div>
+  </div>
+
+  <div id="v-settings" class="hide">
+    <form id="sform" class="form">
+      <h3>Product</h3>
+      <div><label>Product name</label><input name="product_name"></div>
+      <div><label>Site URL (used in emails, e.g. https://firstflake.com)</label><input name="site_url" placeholder="https://"></div>
+      <div><label>Price</label><input name="price" placeholder="17.00"></div>
+      <div><label>Currency</label><select name="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option><option>AUD</option></select></div>
+      <div><label>Support email (shown in emails)</label><input name="support_email"></div>
+
+      <h3>PayPal</h3>
+      <div><label>Environment</label><select name="paypal_env"><option value="sandbox">Sandbox (testing)</option><option value="live">Live</option></select></div>
+      <div></div>
+      <div><label>Client ID</label><input name="paypal_client_id" class="mono"></div>
+      <div><label>Secret <span id="has-pp"></span></label><input name="paypal_secret" type="password" class="mono" placeholder="leave blank to keep current"></div>
+      <div><button type="button" class="ghost" data-test="paypal">Test PayPal connection</button></div>
+
+      <h3>Mailketing SMTP</h3>
+      <div><label>SMTP host</label><input name="smtp_host"></div>
+      <div><label>Port (587 = STARTTLS, 465 = SSL)</label><input name="smtp_port"></div>
+      <div><label>Username</label><input name="smtp_user"></div>
+      <div><label>Password / API key <span id="has-smtp"></span></label><input name="smtp_pass" type="password" placeholder="leave blank to keep current"></div>
+      <div><label>From (must be a verified sender)</label><input name="smtp_from" placeholder="Josie at First Flake <hello@yourdomain.com>"></div>
+      <div><label>&nbsp;</label><button type="button" class="ghost" data-test="smtp">Test SMTP connection</button></div>
+
+      <h3></h3>
+      <div><button type="submit">Save settings</button> <span class="msg" id="smsg"></span></div>
+    </form>
+  </div>
+</main>
+</div>
+
+<script>
+var $=function(s){return document.querySelector(s)};
+var api=function(p,o){o=o||{};if(o.body){o.headers={'Content-Type':'application/json'};o.body=JSON.stringify(o.body);o.method=o.method||'POST';}
+  return fetch('/admin/api/'+p,o).then(function(r){if(r.status===401&&p!=='login'){show(false);throw new Error('Session expired');}return r.json();});};
+var money=function(n,c){return (c||'USD')+' '+Number(n||0).toFixed(2)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var page=1,cur='USD';
+
+function show(logged){$('#login').classList.toggle('hide',logged);$('#app').classList.toggle('hide',!logged);if(logged){loadStats();loadOrders();loadSettings();}}
+$('#lbtn').onclick=function(){api('login',{body:{password:$('#pw').value}}).then(function(j){if(j.ok)show(true);else $('#lmsg').textContent=j.error;});};
+$('#pw').onkeydown=function(e){if(e.key==='Enter')$('#lbtn').click()};
+$('#logout').onclick=function(){api('logout',{method:'POST'}).then(function(){show(false)})};
+document.querySelectorAll('nav a').forEach(function(a){a.onclick=function(){document.querySelectorAll('nav a').forEach(function(x){x.classList.remove('on')});a.classList.add('on');
+  $('#v-orders').classList.toggle('hide',a.dataset.v!=='orders');$('#v-settings').classList.toggle('hide',a.dataset.v!=='settings');};});
+
+function loadStats(){api('stats').then(function(s){
+  var max=Math.max.apply(null,s.daily.map(function(d){return d.sum}).concat([1]));
+  var byDay={};s.daily.forEach(function(d){byDay[d.d]=d.sum});
+  var bars='';for(var i=29;i>=0;i--){var d=new Date(Date.now()-i*864e5).toISOString().slice(0,10);var v=byDay[d]||0;bars+='<i title="'+d+': '+money(v,cur)+'" style="height:'+(v/max*100)+'%"></i>';}
+  $('#cards').innerHTML=
+    '<div class="card"><small>Today</small><div class="v">'+money(s.today.sum,cur)+'</div><div class="n">'+s.today.n+' orders</div></div>'+
+    '<div class="card"><small>This month</small><div class="v">'+money(s.month.sum,cur)+'</div><div class="n">'+s.month.n+' orders</div></div>'+
+    '<div class="card"><small>All time</small><div class="v">'+money(s.total.sum,cur)+'</div><div class="n">'+s.total.n+' orders · '+s.refunded.n+' refunded</div></div>'+
+    '<div class="card"><small>Last 30 days</small><div class="chart">'+bars+'</div></div>';
+});}
+
+function loadOrders(){api('orders?q='+encodeURIComponent($('#q').value)+'&page='+page).then(function(rows){
+  $('#pg').textContent=page;
+  $('#rows').innerHTML=rows.length?rows.map(function(o){return '<tr>'+
+    '<td>'+esc(o.created_at.replace('T',' ').slice(0,16))+'</td>'+
+    '<td>'+esc(o.name||'—')+'<br><span class="mono">'+esc(o.email||'no email')+'</span></td>'+
+    '<td>'+money(o.amount,o.currency)+'</td>'+
+    '<td><span class="tag '+o.status+'">'+o.status+'</span></td>'+
+    '<td class="mono">'+esc(o.paypal_order_id)+'</td>'+
+    '<td>'+(o.email_sent?'✓ sent':'<span class="err">not sent</span>')+'</td>'+
+    '<td>'+o.downloads+'</td>'+
+    '<td style="white-space:nowrap"><button class="ghost" data-a="resend" data-id="'+esc(o.paypal_order_id)+'">Resend email</button> '+
+    '<button class="ghost" data-a="link" data-id="'+esc(o.paypal_order_id)+'">Copy link</button> '+
+    (o.status==='paid'?'<button class="ghost" data-a="refund" data-id="'+esc(o.paypal_order_id)+'">Mark refunded</button>':'<button class="ghost" data-a="paid" data-id="'+esc(o.paypal_order_id)+'">Mark paid</button>')+'</td></tr>';}).join('')
+    :'<tr><td colspan="8" style="text-align:center;color:var(--mud)">No orders yet.</td></tr>';
+});}
+$('#refresh').onclick=function(){page=1;loadStats();loadOrders()};$('#q').oninput=function(){page=1;loadOrders()};
+$('#prev').onclick=function(){if(page>1){page--;loadOrders()}};$('#next').onclick=function(){page++;loadOrders()};
+$('#rows').onclick=function(e){var b=e.target.closest('button');if(!b)return;var id=b.dataset.id,m=$('#omsg');m.className='msg';
+  if(b.dataset.a==='resend'){var to=prompt('Send download link to:',(b.closest('tr').querySelector('.mono').textContent||'').replace('no email',''));if(to===null)return;
+    api('orders/'+id+'/resend',{body:{email:to}}).then(function(j){m.className='msg '+(j.ok?'ok':'err');m.textContent=j.ok?'Email sent to '+to:j.error;loadOrders();});}
+  if(b.dataset.a==='link'){api('orders/'+id+'/link').then(function(j){navigator.clipboard.writeText(j.link);m.className='msg ok';m.textContent='Download link copied (valid 7 days).';});}
+  if(b.dataset.a==='refund'||b.dataset.a==='paid'){var st=b.dataset.a==='refund'?'refunded':'paid';if(!confirm('Mark order as '+st+'? Refunded orders cannot download.'))return;
+    api('orders/'+id+'/status',{body:{status:st}}).then(function(){loadStats();loadOrders();});}
+};
+
+function loadSettings(){api('settings').then(function(s){cur=s.currency;var f=$('#sform');
+  for(var k in s){if(f.elements[k]&&k!=='paypal_secret'&&k!=='smtp_pass')f.elements[k].value=s[k];}
+  $('#has-pp').textContent=s._has.paypal_secret?'(saved)':'(not set)';$('#has-smtp').textContent=s._has.smtp_pass?'(saved)':'(not set)';
+});}
+$('#sform').onsubmit=function(e){e.preventDefault();var d={};new FormData(e.target).forEach(function(v,k){d[k]=v});var m=$('#smsg');
+  api('settings',{body:d}).then(function(j){m.className='msg '+(j.ok?'ok':'err');m.textContent=j.ok?'Saved.':j.error;if(j.ok)loadSettings();});};
+document.querySelectorAll('[data-test]').forEach(function(b){b.onclick=function(){var m=$('#smsg');m.className='msg';m.textContent='Save first, then testing…';
+  $('#sform').requestSubmit();setTimeout(function(){api('test/'+b.dataset.test,{method:'POST'}).then(function(j){m.className='msg '+(j.ok?'ok':'err');m.textContent=j.ok?b.dataset.test.toUpperCase()+' connection OK':j.error;});},600);};});
+
+api('stats').then(function(j){show(!j.error)}).catch(function(){show(false)});
+</script>
+</body>
+</html>
