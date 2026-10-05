@@ -36,7 +36,7 @@ export const DEFAULTS = {
   paypal_env: 'sandbox',
   paypal_client_id: '',
   paypal_secret: '',
-  price: '17.00',
+  price: '9.00',
   currency: 'USD',
   product_name: 'First Flake: 7-Trip Field Workbook (PDF)',
   smtp_host: 'smtp.mailketing.co.id',
