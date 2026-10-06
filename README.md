@@ -56,3 +56,11 @@ Sumber bonus ada di folder `bonus/` (HTML + CSS). PDF hasilnya disimpan di `priv
 - Bonus 1 dibuat dari `bonus/research-west.md` dan `bonus/research-east.md` lewat `python bonus/make_bonus1.py`.
 - Render ulang semua PDF dengan `bash bonus/build.sh` (butuh Google Chrome terpasang).
 - Halaman download memakai parameter `f` (workbook, bonus1 sampai bonus4). Daftar file ada di `FILES` dalam `src/server.js`.
+
+## Workbook utama
+Sumber workbook ada di `workbook/` (generator Python + CSS). PDF hasilnya ditulis ke `private/first-flake-workbook.pdf`.
+- Edit teks atau halaman di `workbook/build.py`, gaya di `workbook/style.css`.
+- Render ulang dengan `bash workbook/render.sh`. Skrip ini melaporkan halaman yang isinya meluber, mencetak PDF lewat Chrome, lalu menambahkan kolom isian (fillable fields) di setiap tabel log dan garis tulis.
+- Daftar isi dan nomor halaman dihitung otomatis. Setiap pemanggilan `page()` menjadi tepat satu halaman.
+- Versi PDF lama disimpan di `workbook/original-v1.pdf` sebagai arsip.
+- Mockup produk dan gambar preview sosial ada di `assets/` (`mockup.html`, `og.html`).

@@ -26,7 +26,7 @@ ${link}
 
 The link works for 7 days. Save every PDF somewhere safe, then print the log pages, the Creek Card, and the Is It Gold? card.
 
-First step tonight: read "A Letter from Josie" on page 3, then score yourself on page 5. Trip 1 happens in your bathtub, so you can start this weekend.
+First step tonight: read "A Letter from Josie" on page 4, score yourself on page 6, then spend one evening on "Choose Your Creek" (page 11). Trip 1 happens in a backyard tub, so you can start this weekend.
 
 Questions? Just reply to this email or write to ${support}.
 

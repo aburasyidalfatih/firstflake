@@ -2,3 +2,7 @@ node_modules
 data
 .env
 .claude/
+_pages/
+_wb.txt
+workbook/fields.json
+workbook/dom.html
