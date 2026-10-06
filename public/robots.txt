@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /checkout.html
+Disallow: /download.html
+Disallow: /admin
+Disallow: /api/
+Sitemap: https://firstflake.com/sitemap.xml
