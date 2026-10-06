@@ -7,6 +7,9 @@ function transport(s) {
     port,
     secure: port === 465,
     auth: { user: s.smtp_user, pass: s.smtp_pass },
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
   });
 }
 
