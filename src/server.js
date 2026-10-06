@@ -8,7 +8,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { getSettings, saveSettings, insertOrder, markEmailSent, bumpDownloads, getOrder, updateStatus, listOrders, stats, DEFAULTS } from './db.js';
 import { makeToken, readToken } from './crypto.js';
 import { captureOrder, summarize, testCredentials } from './paypal.js';
-import { sendDownloadEmail, testSmtp } from './mail.js';
+import { sendDownloadEmail, sendTestEmail, testSmtp } from './mail.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const FILES_DIR = process.env.FILES_DIR || './private';
@@ -172,6 +172,12 @@ app.post('/admin/api/settings', async (c) => {
 });
 app.post('/admin/api/test/paypal', async (c) => {
   try { await testCredentials(getSettings()); return c.json({ ok: true }); }
+  catch (e) { return c.json({ error: e.message }, 400); }
+});
+app.post('/admin/api/test/email', async (c) => {
+  const { to } = await c.req.json().catch(() => ({}));
+  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return c.json({ error: 'Enter a valid email address' }, 400);
+  try { await sendTestEmail(getSettings(), to); return c.json({ ok: true }); }
   catch (e) { return c.json({ error: e.message }, 400); }
 });
 app.post('/admin/api/test/smtp', async (c) => {

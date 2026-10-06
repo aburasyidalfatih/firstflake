@@ -68,7 +68,7 @@ label{display:block;font-size:13px;color:var(--mud);margin:10px 0 4px}
       <div></div>
       <div><label>Client ID</label><input name="paypal_client_id" class="mono"></div>
       <div><label>Secret <span id="has-pp"></span></label><input name="paypal_secret" type="password" class="mono" placeholder="leave blank to keep current"></div>
-      <div><button type="button" class="ghost" data-test="paypal">Test PayPal connection</button></div>
+      <div><button type="button" class="ghost" data-test="paypal">Test PayPal connection</button> <span class="msg" data-res="paypal"></span></div>
 
       <h3>Mailketing SMTP</h3>
       <div><label>SMTP host</label><input name="smtp_host"></div>
@@ -76,7 +76,9 @@ label{display:block;font-size:13px;color:var(--mud);margin:10px 0 4px}
       <div><label>Username</label><input name="smtp_user"></div>
       <div><label>Password / API key <span id="has-smtp"></span></label><input name="smtp_pass" type="password" placeholder="leave blank to keep current"></div>
       <div><label>From (must be a verified sender)</label><input name="smtp_from" placeholder="Josie at First Flake <hello@yourdomain.com>"></div>
-      <div><label>&nbsp;</label><button type="button" class="ghost" data-test="smtp">Test SMTP connection</button></div>
+      <div><label>&nbsp;</label><button type="button" class="ghost" data-test="smtp">Test SMTP connection</button> <span class="msg" data-res="smtp"></span></div>
+      <div><label>Send a test email to</label><input id="test_to" type="email" placeholder="you@example.com"></div>
+      <div><label>&nbsp;</label><button type="button" class="ghost" data-test="email">Send test email</button> <span class="msg" data-res="email"></span></div>
 
       <h3>Tracking (optional)</h3>
       <div><label>Google Analytics 4 ID</label><input name="ga_id" placeholder="G-XXXXXXXXXX" class="mono"></div>
@@ -146,8 +148,13 @@ function loadSettings(){api('settings').then(function(s){cur=s.currency;var f=$(
 });}
 $('#sform').onsubmit=function(e){e.preventDefault();var d={};new FormData(e.target).forEach(function(v,k){d[k]=v});var m=$('#smsg');
   api('settings',{body:d}).then(function(j){m.className='msg '+(j.ok?'ok':'err');m.textContent=j.ok?'Saved.':j.error;if(j.ok)loadSettings();});};
-document.querySelectorAll('[data-test]').forEach(function(b){b.onclick=function(){var m=$('#smsg');m.className='msg';m.textContent='Save first, then testing…';
-  $('#sform').requestSubmit();setTimeout(function(){api('test/'+b.dataset.test,{method:'POST'}).then(function(j){m.className='msg '+(j.ok?'ok':'err');m.textContent=j.ok?b.dataset.test.toUpperCase()+' connection OK':j.error;});},600);};});
+var okText={paypal:'PayPal connection OK',smtp:'SMTP connection OK',email:'Test email sent. Check the inbox (and spam folder).'};
+document.querySelectorAll('[data-test]').forEach(function(b){b.onclick=function(){
+  var k=b.dataset.test, r=document.querySelector('[data-res="'+k+'"]'), opt={method:'POST'};
+  if(k==='email'){var to=$('#test_to').value.trim();if(!to){r.className='msg err';r.textContent='Enter an email address first.';return;}opt={body:{to:to}};}
+  r.className='msg';r.textContent='Saving, then testing…';b.disabled=true;
+  $('#sform').requestSubmit();
+  setTimeout(function(){api('test/'+k,opt).then(function(j){r.className='msg '+(j.ok?'ok':'err');r.textContent=j.ok?okText[k]:j.error;}).catch(function(e){r.className='msg err';r.textContent=e.message;}).finally(function(){b.disabled=false;});},700);};});
 
 api('stats').then(function(j){show(!j.error)}).catch(function(){show(false)});
 </script>

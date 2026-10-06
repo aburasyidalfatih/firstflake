@@ -35,6 +35,23 @@ Read the river. It already knows where the gold is.
   });
 }
 
+export async function sendTestEmail(s, to) {
+  if (!s.smtp_host || !s.smtp_user || !s.smtp_from) throw new Error('SMTP not configured');
+  const info = await transport(s).sendMail({
+    from: s.smtp_from,
+    to,
+    subject: 'First Flake test email',
+    text: `This is a test email from your First Flake admin dashboard.
+
+If you can read this, buyers will receive their download emails from ${s.smtp_from}.
+
+Tip: check that this landed in the inbox, not spam. If it went to spam, add SPF and DKIM records for your sending domain in Mailketing.
+
+Sent ${new Date().toUTCString()}`,
+  });
+  return info.messageId;
+}
+
 export async function testSmtp(s) {
   await transport(s).verify();
   return true;
