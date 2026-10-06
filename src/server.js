@@ -150,8 +150,8 @@ app.post('/admin/api/orders/:id/status', async (c) => {
 app.get('/admin/api/settings', (c) => {
   const s = getSettings();
   const masked = { ...s };
-  for (const k of ['paypal_secret', 'smtp_pass']) masked[k] = s[k] ? '••••••••' : '';
-  masked._has = { paypal_secret: !!s.paypal_secret, smtp_pass: !!s.smtp_pass };
+  for (const k of ['paypal_secret', 'smtp_pass', 'mk_api_token']) masked[k] = s[k] ? '••••••••' : '';
+  masked._has = { paypal_secret: !!s.paypal_secret, smtp_pass: !!s.smtp_pass, mk_api_token: !!s.mk_api_token };
   return c.json(masked);
 });
 app.post('/admin/api/settings', async (c) => {
@@ -165,6 +165,7 @@ app.post('/admin/api/settings', async (c) => {
   }
   if (clean.price && !/^\d+(\.\d{1,2})?$/.test(clean.price)) return c.json({ error: 'Price must be like 17.00' }, 400);
   if (clean.paypal_env && !['live', 'sandbox'].includes(clean.paypal_env)) return c.json({ error: 'Bad env' }, 400);
+  if (clean.mail_method && !['api', 'smtp'].includes(clean.mail_method)) return c.json({ error: 'Bad mail method' }, 400);
   if (clean.ga_id && !/^G-[A-Z0-9]{4,20}$/i.test(clean.ga_id)) return c.json({ error: 'Google Analytics ID must look like G-XXXXXXX' }, 400);
   if (clean.meta_pixel_id && !/^\d{6,20}$/.test(clean.meta_pixel_id)) return c.json({ error: 'Meta Pixel ID must be digits only' }, 400);
   saveSettings(clean);

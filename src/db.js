@@ -30,7 +30,7 @@ db.exec(`
 `);
 
 // Keys ending in "_secret"/"_pass" are stored encrypted.
-const SECRET_KEYS = new Set(['paypal_secret', 'smtp_pass']);
+const SECRET_KEYS = new Set(['paypal_secret', 'smtp_pass', 'mk_api_token']);
 
 export const DEFAULTS = {
   paypal_env: 'sandbox',
@@ -43,7 +43,10 @@ export const DEFAULTS = {
   smtp_port: '587',
   smtp_user: '',
   smtp_pass: '',
-  smtp_from: '',
+  smtp_from: 'hello@firstflake.com',
+  from_name: 'Josie at First Flake',
+  mail_method: 'api',
+  mk_api_token: '',
   site_url: 'https://firstflake.com',
   support_email: 'hello@firstflake.com',
   ga_id: '',
