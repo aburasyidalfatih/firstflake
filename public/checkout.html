@@ -36,12 +36,12 @@
   <div class="row"><span id="pname">First Flake: 7-Trip Field Workbook (PDF)</span><span class="amt">$9.00</span></div>
   <div class="row total"><span>Total</span><span class="amt tot">$9.00 USD</span></div>
   <p class="muted">Includes the 34-page workbook and 4 bonus guides. Pay with PayPal or any debit/credit card. Your download page opens right after payment, and the link is emailed to you.</p>
-  <p class="muted">✓ Instant download · ✓ No account needed · Digital product, all sales final. See <a href="terms.html">Terms</a> &amp; <a href="privacy.html">Privacy</a>.</p>
+  <p class="muted">✓ Instant download · ✓ No account needed · Digital product, all sales final. See <a href="/terms">Terms</a> &amp; <a href="/privacy">Privacy</a>.</p>
   <div id="paypal-button-container"></div>
   <p id="msg" class="muted"></p>
 </div>
 </main>
-<footer><div class="wrap">Payments are processed by PayPal. We never see your card details. · <a href="sales-policy.html">Sales Policy</a></div></footer>
+<footer><div class="wrap">Payments are processed by PayPal. We never see your card details. · <a href="/sales-policy">Sales Policy</a></div></footer>
 
 <script>
 var msg=document.getElementById('msg');
@@ -61,7 +61,7 @@ fetch('/api/config').then(function(r){return r.json()}).then(function(cfg){
         return fetch('/api/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderID:data.orderID})})
           .then(function(r){return r.json()})
           .then(function(j){
-            if(j.token){location.href='download.html?t='+encodeURIComponent(j.token);}
+            if(j.token){location.href='/download?t='+encodeURIComponent(j.token);}
             else{msg.className='err';msg.textContent=j.error||'Payment could not be confirmed. Please contact us with your PayPal receipt.';}
           });
       },

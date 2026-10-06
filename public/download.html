@@ -49,10 +49,10 @@
 </div>
 <div class="box" id="bad" hidden>
   <p class="err">This download link is missing, expired, or invalid.</p>
-  <p>If you already paid, reply to your PayPal receipt email with your order details and we'll send a fresh link. Otherwise, <a href="checkout.html">get the workbook here</a>.</p>
+  <p>If you already paid, reply to your PayPal receipt email with your order details and we'll send a fresh link. Otherwise, <a href="/checkout">get the workbook here</a>.</p>
 </div>
 </main>
-<footer><div class="wrap">© 2026 First Flake · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="sales-policy.html">Sales Policy</a></div></footer>
+<footer><div class="wrap">© 2026 First Flake · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/sales-policy">Sales Policy</a></div></footer>
 <script>
 var t=new URLSearchParams(location.search).get('t');
 if(t){var q='/api/download?t='+encodeURIComponent(t);document.getElementById('dl').href=q;document.querySelectorAll('[data-f]').forEach(function(a){a.href=q+'&f='+a.dataset.f;});document.getElementById('ok').hidden=false;}

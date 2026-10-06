@@ -30,7 +30,7 @@ function siteUrl(c, s) {
   return (s.site_url || new URL(c.req.url).origin).replace(/\/$/, '');
 }
 function downloadLink(c, s, orderId, ttl = 7 * DAY) {
-  return `${siteUrl(c, s)}/download.html?t=${encodeURIComponent(makeToken(`dl:${orderId}`, ttl))}`;
+  return `${siteUrl(c, s)}/download?t=${encodeURIComponent(makeToken(`dl:${orderId}`, ttl))}`;
 }
 
 /* ---------- public API ---------- */
@@ -180,6 +180,19 @@ app.post('/admin/api/test/smtp', async (c) => {
 /* ---------- static ---------- */
 app.get('/admin', (c) => c.redirect('/admin/'));
 app.use('/admin/*', serveStatic({ root: './private', rewriteRequestPath: (p) => p.replace(/^\/admin\/?$/, '/admin.html') }));
-app.use('/*', serveStatic({ root: './public' }));
+// Clean URLs: /terms serves terms.html; old *.html links 301 to the clean form (query string kept).
+app.use('/*', async (c, next) => {
+  const p = c.req.path;
+  if (p.endsWith('.html')) {
+    const clean = p === '/index.html' ? '/' : p.slice(0, -5);
+    const q = new URL(c.req.url).search;
+    return c.redirect(clean + q, 301);
+  }
+  await next();
+});
+app.use('/*', serveStatic({
+  root: './public',
+  rewriteRequestPath: (p) => (p === '/' || p.endsWith('/') || /\.[a-z0-9]+$/i.test(p)) ? p : `${p}.html`,
+}));
 
 serve({ fetch: app.fetch, port: PORT }, () => console.log(`First Flake running on :${PORT}`));
