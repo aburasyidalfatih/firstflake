@@ -6,9 +6,12 @@ services:
     # (Publishing 3000 on the host would clash with the Dokploy dashboard, which uses host port 3000.)
     expose:
       - "3000"
+    # Dokploy writes the variables from the Environment tab into .env next to this file.
+    # APP_SECRET and ADMIN_PASSWORD are read from there.
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - APP_SECRET=${APP_SECRET}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - DB_PATH=/app/data/app.db
     volumes:
       - firstflake-data:/app/data
