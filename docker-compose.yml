@@ -2,8 +2,10 @@ services:
   web:
     build: .
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    # No published ports: Dokploy's Traefik routes firstflake.com to port 3000 inside the container.
+    # (Publishing 3000 on the host would clash with the Dokploy dashboard, which uses host port 3000.)
+    expose:
+      - "3000"
     environment:
       - APP_SECRET=${APP_SECRET}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}

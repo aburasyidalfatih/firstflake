@@ -1,3 +1,11 @@
 node_modules
 data
 .env
+.git
+.claude
+_pages
+_*
+workbook
+bonus
+assets
+README.md

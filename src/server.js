@@ -35,6 +35,8 @@ function downloadLink(c, s, orderId, ttl = 7 * DAY) {
 
 /* ---------- public API ---------- */
 
+app.get('/healthz', (c) => c.text('ok'));
+
 app.get('/api/config', (c) => {
   const s = getSettings();
   return c.json({ clientId: s.paypal_client_id, env: s.paypal_env, price: s.price, currency: s.currency, product: s.product_name, ga: s.ga_id, pixel: s.meta_pixel_id });
@@ -105,7 +107,7 @@ app.post('/admin/api/login', async (c) => {
     return c.json({ error: 'Wrong password' }, 401);
   }
   attempts.delete(ip);
-  setCookie(c, 'admin', makeToken('admin', 12 * 60 * 60 * 1000), { httpOnly: true, sameSite: 'Strict', path: '/admin', secure: c.req.url.startsWith('https'), maxAge: 12 * 3600 });
+  setCookie(c, 'admin', makeToken('admin', 12 * 60 * 60 * 1000), { httpOnly: true, sameSite: 'Strict', path: '/admin', secure: (c.req.header('x-forwarded-proto') || new URL(c.req.url).protocol.replace(':', '')) === 'https', maxAge: 12 * 3600 });
   return c.json({ ok: true });
 });
 app.post('/admin/api/logout', (c) => { deleteCookie(c, 'admin', { path: '/admin' }); return c.json({ ok: true }); });

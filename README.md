@@ -23,20 +23,24 @@ Dockerfile · docker-compose.yml · .env.example
 - Login dibatasi 5 percobaan per 15 menit per IP. Session cookie HttpOnly 12 jam.
 
 ## Deploy di Dokploy
-1. Push folder ini ke repo Git (GitHub/GitLab), atau upload sebagai zip.
-2. Dokploy → Create Application → pilih **Docker Compose** (atau Application dengan Dockerfile, keduanya ada di repo).
-3. Tab **Environment**, isi:
+1. Dokploy → Create Service → **Compose** → Provider GitHub → repo `aburasyidalfatih/firstflake`, branch `main`, compose path `./docker-compose.yml`.
+2. Tab **Environment**:
    ```
-   APP_SECRET=<hasil openssl rand -hex 32>
+   APP_SECRET=<hasil: openssl rand -hex 32>
    ADMIN_PASSWORD=<password admin yang kuat>
    ```
-4. Tab **Domains**: tambahkan domain, port 3000, aktifkan HTTPS (Let's Encrypt). Dokploy/Traefik akan meneruskan header `x-forwarded-for` yang dipakai untuk rate limit login.
-5. Deploy. Volume `firstflake-data` otomatis dibuat agar database tidak hilang saat redeploy.
-6. Buka `/admin`, isi Settings:
-   - **PayPal:** developer.paypal.com → Apps & Credentials → Live → Client ID + Secret. Mulai dengan Sandbox dulu untuk tes, lalu ganti ke Live.
-   - **Mailketing SMTP:** host, port, username, password dari dashboard Mailketing, dan alamat pengirim yang sudah diverifikasi di Mailketing.
-   - **Site URL:** `https://firstflake.com` (sudah default).
-   - Klik "Test PayPal connection" dan "Test SMTP connection" untuk memastikan.
+   Simpan `APP_SECRET` di tempat aman. Kalau berubah, kredensial PayPal/SMTP tersimpan tidak bisa dibaca dan link download lama tidak berlaku.
+3. Tab **Domains**: host `firstflake.com`, service `web`, container port `3000`, HTTPS aktif (Let's Encrypt). Tambahkan juga `www.firstflake.com` kalau mau.
+4. DNS: A record `firstflake.com` (dan `www`) ke IP VPS.
+5. **Deploy.** Compose sengaja tidak mempublikasikan port ke host, karena port 3000 host dipakai dashboard Dokploy. Trafik masuk lewat Traefik.
+6. Buka `https://firstflake.com/healthz`, harus muncul `ok`.
+7. Buka `/admin` → Settings:
+   - **PayPal:** mulai dengan Sandbox, lakukan satu pembelian uji, lalu ganti ke **Live** dengan Client ID + Secret Live.
+   - **Mailketing SMTP:** host, port, username, password, dan alamat pengirim yang sudah diverifikasi.
+   - Klik "Test PayPal connection" dan "Test SMTP connection".
+8. Setelah live: Facebook Sharing Debugger → `https://firstflake.com` → Scrape Again.
+
+Data (order dan pengaturan) ada di volume `firstflake-data` dan tetap aman saat redeploy. Container berjalan sebagai user non-root dan punya healthcheck di `/healthz`.
 
 ## Jalankan lokal
 ```bash
