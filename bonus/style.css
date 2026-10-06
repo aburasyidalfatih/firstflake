@@ -1,0 +1,29 @@
+@page{size:Letter;margin:0.7in 0.75in 0.8in}
+:root{--ink:#1f1a14;--mud:#6b5a44;--gold:#c9961a;--gold-d:#9c7210;--line:#e6dccb;--cream:#faf6ee}
+*{box-sizing:border-box}
+body{font:11pt/1.5 Georgia,"Times New Roman",serif;color:var(--ink);margin:0}
+.kicker{color:var(--gold-d);font-weight:700;letter-spacing:.14em;font-size:8.5pt;text-transform:uppercase;margin:0 0 4px}
+h1{font-size:26pt;line-height:1.1;margin:0 0 6px}
+h2{font-size:17pt;margin:22px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--gold);break-after:avoid}
+h3{font-size:12pt;margin:14px 0 4px;break-after:avoid}
+p{margin:0 0 8px}
+.lead{font-size:12.5pt;color:var(--mud)}
+.box{background:var(--cream);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:10px 0;break-inside:avoid}
+.ezra{border-left:3px solid var(--gold);padding:6px 12px;margin:10px 0;font-style:italic;color:var(--mud);break-inside:avoid}
+ul,ol{margin:0 0 8px;padding-left:20px}li{margin-bottom:4px}
+table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:10pt;break-inside:auto}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+th{background:#f3ecdd;font-size:8.5pt;text-transform:uppercase;letter-spacing:.06em;color:var(--mud)}
+tr{break-inside:avoid}
+.spot{margin:0 0 12px;padding-left:10px;border-left:3px solid var(--line);break-inside:avoid}.spot b{display:block}.spot .m{color:var(--mud);font-size:9.5pt}
+.url{font-family:ui-monospace,Consolas,monospace;font-size:8.5pt;color:var(--gold-d);word-break:break-all}
+.state{break-before:page}.state:first-of-type{break-before:auto}
+.cover{height:9in;display:flex;flex-direction:column;justify-content:space-between;break-after:page}
+.cover .big{font-size:40pt;line-height:1;font-weight:700;color:var(--gold)}
+.cover .q{font-style:italic;color:var(--mud)}
+.foot{font-size:8.5pt;color:var(--mud);border-top:1px solid var(--line);padding-top:6px;margin-top:20px}
+.check{list-style:none;padding-left:0}.check li::before{content:"☐  ";color:var(--gold-d)}
+.cols{columns:2;gap:24px}
+.card{border:2px solid var(--gold);border-radius:8px;padding:14px 16px;break-inside:avoid}
+.small{font-size:9.5pt;color:var(--mud)}
+.warn{background:#fdf1ee;border:1px solid #f1c9c2;border-radius:6px;padding:8px 12px;margin:10px 0}

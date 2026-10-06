@@ -14,9 +14,16 @@
 <div class="box" id="ok" hidden>
   <p class="ok">✓ Payment confirmed. Thank you!</p>
   <h2 style="margin-top:0">Your workbook is ready</h2>
-  <p>Click below to download your PDF. Save it somewhere safe, then print the log pages and the Creek Card.</p>
-  <a class="btn" id="dl" href="#">Download the Workbook (PDF)</a>
-  <p class="muted">This link works for 24 hours. Download now or bookmark this page. If anything goes wrong, reply to your PayPal receipt email and we'll help.</p>
+  <p>Save every file somewhere safe. Print the log pages, the Creek Card, and the Is It Gold? card.</p>
+  <a class="btn" id="dl" href="#" style="display:block;text-align:center">Download the Workbook (PDF, 34 pages)</a>
+  <h3 style="margin:22px 0 6px">Your 4 bonuses</h3>
+  <ul class="files">
+    <li><a data-f="bonus1" href="#">Bonus 1: Public Panning Areas by State</a><br><span class="muted">Where you can legally pan, state by state, with official links.</span></li>
+    <li><a data-f="bonus2" href="#">Bonus 2: How to Check a Mining Claim in 10 Minutes</a><br><span class="muted">Step-by-step through the BLM's MLRS so you never claim-jump by accident.</span></li>
+    <li><a data-f="bonus3" href="#">Bonus 3: Is It Gold? Pocket ID Card</a><br><span class="muted">Gold vs. mica vs. pyrite on one printable card.</span></li>
+    <li><a data-f="bonus4" href="#">Bonus 4: The Trip 1 Paydirt Shortcut</a><br><span class="muted">Practice with guaranteed gold at home before you hit the creek.</span></li>
+  </ul>
+  <p class="muted">These links work for 7 days. Download now or bookmark this page. If anything goes wrong, reply to your PayPal receipt email and we'll help.</p>
   <hr style="border:0;border-top:1px solid var(--line);margin:24px 0">
   <p><b>First step tonight:</b> read "A Letter from Josie" on page 3, then score yourself on page 5. Trip 1 happens in your bathtub, so you can start this weekend.</p>
 </div>
@@ -28,7 +35,7 @@
 <footer><div class="wrap">© 2026 First Flake</div></footer>
 <script>
 var t=new URLSearchParams(location.search).get('t');
-if(t){document.getElementById('dl').href='/api/download?t='+encodeURIComponent(t);document.getElementById('ok').hidden=false;}
+if(t){var q='/api/download?t='+encodeURIComponent(t);document.getElementById('dl').href=q;document.querySelectorAll('[data-f]').forEach(function(a){a.href=q+'&f='+a.dataset.f;});document.getElementById('ok').hidden=false;}
 else{document.getElementById('bad').hidden=false;}
 </script>
 </body>

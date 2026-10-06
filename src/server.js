@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-import { createReadStream, statSync } from 'node:fs';
+import { createReadStream, statSync, existsSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import { timingSafeEqual } from 'node:crypto';
 import { getSettings, saveSettings, insertOrder, markEmailSent, bumpDownloads, getOrder, updateStatus, listOrders, stats, DEFAULTS } from './db.js';
@@ -11,7 +11,15 @@ import { captureOrder, summarize, testCredentials } from './paypal.js';
 import { sendDownloadEmail, testSmtp } from './mail.js';
 
 const PORT = Number(process.env.PORT) || 3000;
-const PDF_PATH = process.env.PDF_PATH || './private/first-flake-workbook.pdf';
+const FILES_DIR = process.env.FILES_DIR || './private';
+// key -> [file on disk, filename shown to buyer]
+const FILES = {
+  workbook: ['first-flake-workbook.pdf', 'First-Flake-7-Trip-Workbook.pdf'],
+  bonus1: ['bonus-1-public-panning-areas-by-state.pdf', 'Bonus-1-Public-Panning-Areas-by-State.pdf'],
+  bonus2: ['bonus-2-check-a-mining-claim.pdf', 'Bonus-2-How-to-Check-a-Mining-Claim.pdf'],
+  bonus3: ['bonus-3-is-it-gold-card.pdf', 'Bonus-3-Is-It-Gold-ID-Card.pdf'],
+  bonus4: ['bonus-4-paydirt-shortcut.pdf', 'Bonus-4-Trip-1-Paydirt-Shortcut.pdf'],
+};
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error('ADMIN_PASSWORD env var is required.'); process.exit(1); }
 
@@ -63,13 +71,16 @@ app.get('/api/download', (c) => {
   const orderId = payload.slice(3);
   const order = getOrder.get(orderId);
   if (!order || order.status !== 'paid') return c.text('This order is not active.', 403);
-  bumpDownloads.run(orderId);
-  const size = statSync(PDF_PATH).size;
-  return new Response(Readable.toWeb(createReadStream(PDF_PATH)), {
+  const f = FILES[c.req.query('f') || 'workbook'];
+  if (!f) return c.text('Unknown file.', 404);
+  const path = `${FILES_DIR}/${f[0]}`;
+  if (!existsSync(path)) return c.text('File not available yet. Please contact support.', 404);
+  if (f === FILES.workbook) bumpDownloads.run(orderId);
+  return new Response(Readable.toWeb(createReadStream(path)), {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Length': String(size),
-      'Content-Disposition': 'attachment; filename="First-Flake-7-Trip-Workbook.pdf"',
+      'Content-Length': String(statSync(path).size),
+      'Content-Disposition': `attachment; filename="${f[1]}"`,
       'Cache-Control': 'private, no-store',
     },
   });

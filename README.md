@@ -50,3 +50,9 @@ Timpa `private/first-flake-workbook.pdf` dengan file baru lalu redeploy, atau mo
 
 ## Backup
 Cukup salin `data/app.db` (atau volume `firstflake-data`). Secret di dalamnya hanya bisa dibaca dengan `APP_SECRET` yang sama, jadi simpan nilai itu juga.
+
+## Bonus PDF
+Sumber bonus ada di folder `bonus/` (HTML + CSS). PDF hasilnya disimpan di `private/` dan ikut ke Docker image.
+- Bonus 1 dibuat dari `bonus/research-west.md` dan `bonus/research-east.md` lewat `python bonus/make_bonus1.py`.
+- Render ulang semua PDF dengan `bash bonus/build.sh` (butuh Google Chrome terpasang).
+- Halaman download memakai parameter `f` (workbook, bonus1 sampai bonus4). Daftar file ada di `FILES` dalam `src/server.js`.

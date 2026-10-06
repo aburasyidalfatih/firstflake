@@ -20,11 +20,11 @@ export async function sendDownloadEmail(s, { to, name, link }) {
     subject: 'Your First Flake workbook is ready to download',
     text: `Hi ${first},
 
-Thank you for your purchase! Here is your download link for ${s.product_name}:
+Thank you for your purchase! Here is your download page for ${s.product_name} and your 4 bonus guides:
 
 ${link}
 
-The link works for 7 days. Save the PDF somewhere safe, then print the log pages and the Creek Card.
+The link works for 7 days. Save every PDF somewhere safe, then print the log pages, the Creek Card, and the Is It Gold? card.
 
 First step tonight: read "A Letter from Josie" on page 3, then score yourself on page 5. Trip 1 happens in your bathtub, so you can start this weekend.
 
