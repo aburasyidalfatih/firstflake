@@ -37,7 +37,7 @@ function downloadLink(c, s, orderId, ttl = 7 * DAY) {
 
 app.get('/api/config', (c) => {
   const s = getSettings();
-  return c.json({ clientId: s.paypal_client_id, env: s.paypal_env, price: s.price, currency: s.currency, product: s.product_name });
+  return c.json({ clientId: s.paypal_client_id, env: s.paypal_env, price: s.price, currency: s.currency, product: s.product_name, ga: s.ga_id, pixel: s.meta_pixel_id });
 });
 
 app.post('/api/capture', async (c) => {
@@ -163,6 +163,8 @@ app.post('/admin/api/settings', async (c) => {
   }
   if (clean.price && !/^\d+(\.\d{1,2})?$/.test(clean.price)) return c.json({ error: 'Price must be like 17.00' }, 400);
   if (clean.paypal_env && !['live', 'sandbox'].includes(clean.paypal_env)) return c.json({ error: 'Bad env' }, 400);
+  if (clean.ga_id && !/^G-[A-Z0-9]{4,20}$/i.test(clean.ga_id)) return c.json({ error: 'Google Analytics ID must look like G-XXXXXXX' }, 400);
+  if (clean.meta_pixel_id && !/^\d{6,20}$/.test(clean.meta_pixel_id)) return c.json({ error: 'Meta Pixel ID must be digits only' }, 400);
   saveSettings(clean);
   return c.json({ ok: true });
 });

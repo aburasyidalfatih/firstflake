@@ -46,6 +46,8 @@ export const DEFAULTS = {
   smtp_from: '',
   site_url: 'https://firstflake.com',
   support_email: 'hello@firstflake.com',
+  ga_id: '',
+  meta_pixel_id: '',
 };
 
 export function getSettings() {
