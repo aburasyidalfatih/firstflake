@@ -56,3 +56,14 @@ ul.files{list-style:none;padding:0;margin:0}ul.files li{padding:10px 0;border-bo
 footer p{margin:4px 0}
 @media(max-width:760px){.hook{font-size:16px}}
 @media(max-width:760px){header .btn{display:none}}
+.yell{font-size:18px;font-style:italic;color:var(--gold-d);margin:-6px 0 22px}
+.cred{text-align:center;color:var(--mud);font-size:14px;margin:6px 0 0}
+.grid.two .card b{color:var(--ink)}
+.card p i{color:var(--ink)}
+.pages{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:4px 0 18px}
+.pages figure{margin:0;text-align:center}.pages img{width:100%;height:auto;display:block;border:1px solid var(--line);box-shadow:0 8px 18px rgba(0,0,0,.1);background:#fff}
+.pages figcaption{font-size:14px;color:var(--mud);margin-top:8px}
+ul.inside{padding-left:20px;margin:0}ul.inside li{margin-bottom:8px}
+ol.steps{margin:14px 0 0;padding-left:20px;font-size:15px;color:var(--mud)}ol.steps li{margin-bottom:3px}
+.cta .quote{font-style:italic;font-size:17px;max-width:620px;margin:0 auto 18px;color:#e9dcb8}.cta .quote span{font-style:normal;font-size:13px;opacity:.8}
+@media(max-width:760px){.pages{grid-template-columns:1fr 1fr}.yell{font-size:16px}}
