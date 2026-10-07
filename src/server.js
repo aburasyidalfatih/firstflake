@@ -231,16 +231,24 @@ function versionOf(file) {
   }
   return assetVersion.get(file);
 }
-const ASSET_RE = /((?:src|href|srcset|content)=")((?:https:\/\/firstflake\.com)?\/?)([\w.-]+\.(?:css|js|webp|jpg|jpeg|png|ico|svg))(")/g;
+// Any local asset reference: "file.ext", "/file.ext", "https://firstflake.com/file.ext", also inside srcset lists.
+const ASSET_RE = /(["\s,])((?:https:\/\/firstflake\.com)?\/?)([\w.-]+\.(?:css|js|webp|jpg|jpeg|png|ico|svg))(?=["\s,])/g;
+const EDGE_CACHEABLE = new Set(['index', 'privacy', 'terms', 'sales-policy', 'checkout']);
 const pages = new Map();
 function renderPage(name) {
   if (!pages.has(name)) {
     let html = null;
     try {
-      html = readFileSync(`${PUBLIC}/${name}.html`, 'utf8').replace(ASSET_RE, (m, attr, prefix, file, q) => {
+      html = readFileSync(`${PUBLIC}/${name}.html`, 'utf8');
+      // Inline the small stylesheet so it doesn't block first paint.
+      const css = readFileSync(`${PUBLIC}/style.css`, 'utf8').replace(/\s*\n\s*/g, '');
+      html = html.replace(/<link rel="stylesheet" href="\/?style\.css">/, () => `<style>${css}</style>`);
+      html = html.replace(ASSET_RE, (m, lead, prefix, file) => {
         const v = versionOf(file);
-        return v ? `${attr}${prefix}${file}?v=${v}${q}` : m;
+        return v ? `${lead}${prefix}${file}?v=${v}` : m;
       });
+      // Cloudflare Email Obfuscation would inject a render-blocking script; opt this page out.
+      html = html.replace(/<body([^>]*)>/, '<body$1><!--email_off-->').replace('</body>', '<!--/email_off--></body>');
     } catch { html = null; }
     pages.set(name, html);
   }
@@ -257,7 +265,9 @@ app.get('/*', async (c, next) => {
   const name = p === '/' || p === '' ? 'index' : p.replace(/^\/|\/$/g, '');
   const html = /^[\w-]+$/.test(name) ? renderPage(name) : null;
   if (!html) return next();
-  return c.html(html, 200, { 'Cache-Control': 'no-cache' });
+  // Static pages may be cached at Cloudflare's edge for 5 minutes (needs a Cache Rule in Cloudflare to take effect).
+  const cc = EDGE_CACHEABLE.has(name) ? 'public, max-age=0, s-maxage=300' : 'no-cache';
+  return c.html(html, 200, { 'Cache-Control': cc });
 });
 app.use('/*', serveStatic({ root: PUBLIC }));
 
