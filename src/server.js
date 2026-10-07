@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-import { createReadStream, statSync, existsSync } from 'node:fs';
+import { createReadStream, statSync, existsSync, readFileSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import { timingSafeEqual } from 'node:crypto';
 import { insertEvent, seenToday, funnel } from './db.js';
@@ -219,9 +219,46 @@ app.use('/*', async (c, next) => {
   }
   await next();
 });
-app.use('/*', serveStatic({
-  root: './public',
-  rewriteRequestPath: (p) => (p === '/' || p.endsWith('/') || /\.[a-z0-9]+$/i.test(p)) ? p : `${p}.html`,
-}));
+
+// HTML pages are served from memory with cache-busting ?v=<content hash> added to every local asset,
+// so Cloudflare always fetches a fresh copy when a CSS/JS/image file changes.
+const PUBLIC = './public';
+const assetVersion = new Map();
+function versionOf(file) {
+  if (!assetVersion.has(file)) {
+    try { assetVersion.set(file, createHash('sha1').update(readFileSync(`${PUBLIC}/${file}`)).digest('hex').slice(0, 10)); }
+    catch { assetVersion.set(file, null); }
+  }
+  return assetVersion.get(file);
+}
+const ASSET_RE = /((?:src|href|srcset|content)=")((?:https:\/\/firstflake\.com)?\/?)([\w.-]+\.(?:css|js|webp|jpg|jpeg|png|ico|svg))(")/g;
+const pages = new Map();
+function renderPage(name) {
+  if (!pages.has(name)) {
+    let html = null;
+    try {
+      html = readFileSync(`${PUBLIC}/${name}.html`, 'utf8').replace(ASSET_RE, (m, attr, prefix, file, q) => {
+        const v = versionOf(file);
+        return v ? `${attr}${prefix}${file}?v=${v}${q}` : m;
+      });
+    } catch { html = null; }
+    pages.set(name, html);
+  }
+  return pages.get(name);
+}
+app.get('/*', async (c, next) => {
+  const p = c.req.path;
+  if (/\.[a-z0-9]+$/i.test(p)) {
+    await next();
+    // Versioned asset URLs never change content, so they can be cached for a long time.
+    if (c.req.query('v') && c.res.status === 200) c.res.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    return;
+  }
+  const name = p === '/' || p === '' ? 'index' : p.replace(/^\/|\/$/g, '');
+  const html = /^[\w-]+$/.test(name) ? renderPage(name) : null;
+  if (!html) return next();
+  return c.html(html, 200, { 'Cache-Control': 'no-cache' });
+});
+app.use('/*', serveStatic({ root: PUBLIC }));
 
 serve({ fetch: app.fetch, port: PORT }, () => console.log(`First Flake running on :${PORT}`));
