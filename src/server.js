@@ -5,6 +5,8 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { createReadStream, statSync, existsSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import { timingSafeEqual } from 'node:crypto';
+import { insertEvent, seenToday, funnel } from './db.js';
+import { createHash } from 'node:crypto';
 import { getSettings, saveSettings, insertOrder, markEmailSent, bumpDownloads, getOrder, updateStatus, listOrders, stats, DEFAULTS } from './db.js';
 import { makeToken, readToken } from './crypto.js';
 import { captureOrder, summarize, testCredentials } from './paypal.js';
@@ -36,6 +38,23 @@ function downloadLink(c, s, orderId, ttl = 7 * DAY) {
 /* ---------- public API ---------- */
 
 app.get('/healthz', (c) => c.text('ok'));
+
+// Anonymous, cookie-free funnel tracking. Visitor id = hash(secret + day + ip + user agent), never stored raw.
+const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|headless|lighthouse|monitor|curl|wget|python/i;
+app.post('/api/e', async (c) => {
+  const ua = c.req.header('user-agent') || '';
+  if (!ua || BOT.test(ua)) return c.body(null, 204);
+  const { type, source } = await c.req.json().catch(() => ({}));
+  if (!['view', 'checkout', 'pay_click'].includes(type)) return c.body(null, 204);
+  const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for')?.split(',')[0].trim() || 'local';
+  const day = new Date().toISOString().slice(0, 10);
+  const vid = createHash('sha256').update(`${process.env.APP_SECRET}|${day}|${ip}|${ua}`).digest('hex').slice(0, 16);
+  if (!seenToday.get(type, vid)) {
+    const src = typeof source === 'string' ? source.toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 40) || null : null;
+    insertEvent.run(type, vid, src);
+  }
+  return c.body(null, 204);
+});
 
 app.get('/api/config', (c) => {
   const s = getSettings();
@@ -119,6 +138,7 @@ app.use('/admin/api/*', async (c, next) => {
 });
 
 app.get('/admin/api/stats', (c) => c.json(stats()));
+app.get('/admin/api/funnel', (c) => c.json(funnel(Math.max(0, Number(c.req.query('days')) || 0))));
 app.get('/admin/api/orders', (c) => {
   const page = Math.max(1, Number(c.req.query('page')) || 1);
   return c.json(listOrders({ q: c.req.query('q') || '', limit: 50, offset: (page - 1) * 50 }));

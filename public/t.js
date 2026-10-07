@@ -1,4 +1,12 @@
-/* Loads GA4 / Meta Pixel after the page has rendered, only if IDs are set in admin. */
+/* First-party funnel beacon (no cookies), then GA4 / Meta Pixel if IDs are set in admin. */
+window.ffTrack=function(type){try{
+  var src='', q=new URLSearchParams(location.search);
+  if(q.get('utm_source'))src=q.get('utm_source');
+  else if(document.referrer){var h=new URL(document.referrer).hostname.replace(/^www\./,'');if(h&&h!==location.hostname.replace(/^www\./,''))src=h;}
+  var b=JSON.stringify({type:type,source:src});
+  if(!(navigator.sendBeacon&&navigator.sendBeacon('/api/e',new Blob([b],{type:'application/json'}))))fetch('/api/e',{method:'POST',headers:{'Content-Type':'application/json'},body:b,keepalive:true});
+}catch(e){}};
+(function(){var p=location.pathname.replace(/\/$/,'');if(p===''||p==='/index')ffTrack('view');else if(p==='/checkout')ffTrack('checkout');})();
 (function(){
   function go(){
     fetch('/api/config').then(function(r){return r.json()}).then(function(c){

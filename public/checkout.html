@@ -55,7 +55,7 @@ fetch('/api/config').then(function(r){return r.json()}).then(function(cfg){
   sc.onload=function(){
     paypal.Buttons({
       style:{layout:'vertical',color:'gold',shape:'rect',label:'pay'},
-      createOrder:function(d,a){return a.order.create({purchase_units:[{description:cfg.product,amount:{currency_code:cfg.currency,value:cfg.price}}]});},
+      createOrder:function(d,a){if(window.ffTrack)ffTrack('pay_click');return a.order.create({purchase_units:[{description:cfg.product,amount:{currency_code:cfg.currency,value:cfg.price}}]});},
       onApprove:function(data){
         msg.className='muted';msg.textContent='Confirming your payment…';
         return fetch('/api/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderID:data.orderID})})

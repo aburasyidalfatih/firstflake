@@ -22,6 +22,14 @@ db.exec(`
     downloads INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   );
+  CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT DEFAULT (datetime('now')),
+    type TEXT NOT NULL,
+    vid TEXT NOT NULL,
+    source TEXT
+  );
+  CREATE INDEX IF NOT EXISTS events_type_ts ON events(type, ts);
   CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
@@ -84,6 +92,28 @@ export function listOrders({ q = '', limit = 50, offset = 0 }) {
   const like = `%${q}%`;
   return db.prepare(`SELECT * FROM orders WHERE email LIKE ? OR paypal_order_id LIKE ? OR name LIKE ?
     ORDER BY id DESC LIMIT ? OFFSET ?`).all(like, like, like, limit, offset);
+}
+
+export const insertEvent = db.prepare('INSERT INTO events (type, vid, source) VALUES (?, ?, ?)');
+export const seenToday = db.prepare("SELECT 1 FROM events WHERE type = ? AND vid = ? AND date(ts) = date('now') LIMIT 1");
+
+// Funnel for the last `days` days (0 = all time). Unique visitors per step; paid comes from orders.
+export function funnel(days) {
+  const since = days > 0 ? `datetime('now','-${Number(days)} days')` : `'1970-01-01'`;
+  const uniq = (type) => db.prepare(`SELECT COUNT(DISTINCT vid || date(ts)) n FROM events WHERE type = ? AND ts >= ${since}`).get(type).n;
+  const paid = db.prepare(`SELECT COUNT(*) n, COALESCE(SUM(amount),0) sum FROM orders WHERE status = 'paid' AND created_at >= ${since}`).get();
+  const sources = db.prepare(`SELECT COALESCE(source,'direct') source, COUNT(DISTINCT vid || date(ts)) n FROM events WHERE type = 'view' AND ts >= ${since} GROUP BY 1 ORDER BY n DESC LIMIT 8`).all();
+  const daily = db.prepare(`SELECT date(ts) d,
+      COUNT(DISTINCT CASE WHEN type='view' THEN vid END) v,
+      COUNT(DISTINCT CASE WHEN type='checkout' THEN vid END) c,
+      COUNT(DISTINCT CASE WHEN type='pay_click' THEN vid END) p
+    FROM events WHERE ts >= datetime('now','-13 days') GROUP BY d ORDER BY d DESC`).all();
+  const paidDaily = Object.fromEntries(db.prepare(`SELECT date(created_at) d, COUNT(*) n FROM orders WHERE status='paid' AND created_at >= datetime('now','-13 days') GROUP BY d`).all().map((r) => [r.d, r.n]));
+  return {
+    view: uniq('view'), checkout: uniq('checkout'), pay_click: uniq('pay_click'),
+    paid: paid.n, revenue: paid.sum, sources,
+    daily: daily.map((r) => ({ ...r, paid: paidDaily[r.d] || 0 })),
+  };
 }
 
 export function stats() {
