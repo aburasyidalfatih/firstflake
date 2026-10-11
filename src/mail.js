@@ -53,7 +53,7 @@ function send(s, msg) {
   return (s.mail_method === 'smtp' ? sendViaSmtp : sendViaApi)(s, msg);
 }
 
-export async function sendDownloadEmail(s, { to, name, link }) {
+export async function sendDownloadEmail(s, { to, name, link, bump = false }) {
   const first = (name || '').split(' ')[0] || 'friend';
   const support = s.support_email || fromParts(s).email;
   return send(s, {
@@ -61,12 +61,14 @@ export async function sendDownloadEmail(s, { to, name, link }) {
     subject: 'Your First Flake workbook is ready to download',
     text: `Hi ${first},
 
-Thank you for your purchase! Here is your download page for ${s.product_name} and your 4 bonus guides:
+Thank you for your purchase! Here is your download page for ${s.product_name}, your 4 bonus guides${bump ? ', and the Junior Prospector Family Pack' : ''}:
 
 ${link}
 
 The link works for 7 days. Save every PDF somewhere safe, then print the log pages, the Creek Card, and the Is It Gold? card.
-
+${bump ? `
+For the kids: start with the Safety Pledge on page 3 of the Family Pack, and print one Junior Trip Log for every trip. The certificates on page 16 look best on card stock.
+` : ''}
 First step tonight: read "A Letter from Josie" on page 4, score yourself on page 6, then spend one evening on "Choose Your Creek" (page 11). Trip 1 happens in a backyard tub, so you can start this weekend.
 
 Questions? Just reply to this email or write to ${support}.

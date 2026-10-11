@@ -67,3 +67,14 @@ ul.inside{padding-left:20px;margin:0}ul.inside li{margin-bottom:8px}
 ol.steps{margin:14px 0 0;padding-left:20px;font-size:15px;color:var(--mud)}ol.steps li{margin-bottom:3px}
 .cta .quote{font-style:italic;font-size:17px;max-width:620px;margin:0 auto 18px;color:#e9dcb8}.cta .quote span{font-style:normal;font-size:13px;opacity:.8}
 @media(max-width:760px){.pages{grid-template-columns:1fr 1fr}.yell{font-size:16px}}
+.bump{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;margin:18px 0;padding:14px;border:2px dashed var(--gold);border-radius:8px;background:#fffaf0;cursor:pointer}
+.bump.on{border-style:solid;background:#fff6e0}
+.bump[hidden]{display:none}
+.bump img{width:100%;height:auto;display:block;border-radius:4px}
+.bump-copy{display:block;font-size:15px;line-height:1.45}
+.bump-head{display:flex;gap:8px;align-items:flex-start;color:var(--ink);margin-bottom:6px}
+.bump-head input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--btn)}
+.bump-body{display:block;color:var(--mud)}
+.bump-gift{display:block;margin-top:6px;font-style:italic;color:var(--gold-d);font-size:14px}
+@media(max-width:520px){.bump{grid-template-columns:1fr}.bump img{max-width:260px;margin:0 auto}}
+[hidden]{display:none!important}

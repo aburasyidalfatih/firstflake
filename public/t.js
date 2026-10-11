@@ -9,8 +9,13 @@ window.ffTrack=function(type){try{
 (function(){var p=location.pathname.replace(/\/$/,'');if(p===''||p==='/index')ffTrack('view');else if(p==='/checkout')ffTrack('checkout');})();
 (function(){
   function go(){
-    fetch('/api/config').then(function(r){return r.json()}).then(function(c){
-      var ev=document.body.dataset.ev, val=c.price, cur=c.currency;
+    var tok=new URLSearchParams(location.search).get('t')||'';
+    var cfg=fetch('/api/config').then(function(r){return r.json()});
+    // On the download page, report the real order value (it includes the Family Pack when bought).
+    var ord=document.body.dataset.ev==='purchase'&&tok?fetch('/api/order?t='+encodeURIComponent(tok)).then(function(r){return r.json()}).catch(function(){return {}}):Promise.resolve({});
+    Promise.all([cfg,ord]).then(function(res){
+      var c=res[0], o=res[1]||{};
+      var ev=document.body.dataset.ev, val=o.amount||c.price, cur=o.currency||c.currency;
       if(ev==='purchase'){var k='ff_p_'+(new URLSearchParams(location.search).get('t')||'').slice(0,40);if(localStorage.getItem(k))ev='';else localStorage.setItem(k,1);}
       if(c.ga){
         var s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id='+c.ga;document.head.appendChild(s);

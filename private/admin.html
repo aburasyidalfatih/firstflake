@@ -76,6 +76,12 @@ label{display:block;font-size:13px;color:var(--mud);margin:10px 0 4px}
       <div><label>Currency</label><select name="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option><option>AUD</option></select></div>
       <div><label>Support email (shown in emails)</label><input name="support_email"></div>
 
+      <h3>Order bump: Family Pack</h3>
+      <div><label>Show at checkout</label><select name="bump_enabled"><option value="1">On</option><option value="0">Off</option></select></div>
+      <div><label>Family Pack price</label><input name="bump_price" placeholder="7.00"></div>
+      <div><label>Name on receipt and checkout</label><input name="bump_name"></div>
+      <div></div>
+
       <h3>PayPal</h3>
       <div><label>Environment</label><select name="paypal_env"><option value="sandbox">Sandbox (testing)</option><option value="live">Live</option></select></div>
       <div></div>
@@ -133,6 +139,7 @@ function loadStats(){api('stats').then(function(s){
     '<div class="card"><small>Today</small><div class="v">'+money(s.today.sum,cur)+'</div><div class="n">'+s.today.n+' orders</div></div>'+
     '<div class="card"><small>This month</small><div class="v">'+money(s.month.sum,cur)+'</div><div class="n">'+s.month.n+' orders</div></div>'+
     '<div class="card"><small>All time</small><div class="v">'+money(s.total.sum,cur)+'</div><div class="n">'+s.total.n+' orders · '+s.refunded.n+' refunded</div></div>'+
+    '<div class="card"><small>Family Pack add-on</small><div class="v">'+(s.total.n?Math.round(100*s.bump.n/s.total.n):0)+'%</div><div class="n">'+s.bump.n+' of '+s.total.n+' paid orders</div></div>'+
     '<div class="card"><small>Last 30 days</small><div class="chart">'+bars+'</div></div>';
 });}
 
@@ -141,7 +148,7 @@ function loadOrders(){api('orders?q='+encodeURIComponent($('#q').value)+'&page='
   $('#rows').innerHTML=rows.length?rows.map(function(o){return '<tr>'+
     '<td>'+esc(o.created_at.replace('T',' ').slice(0,16))+'</td>'+
     '<td>'+esc(o.name||'—')+'<br><span class="mono">'+esc(o.email||'no email')+'</span></td>'+
-    '<td>'+money(o.amount,o.currency)+'</td>'+
+    '<td>'+money(o.amount,o.currency)+(String(o.items||'').indexOf('familypack')>-1?'<br><span class="tag paid" title="Bought the Family Pack order bump">+ Family Pack</span>':'')+'</td>'+
     '<td><span class="tag '+o.status+'">'+o.status+'</span></td>'+
     '<td class="mono">'+esc(o.paypal_order_id)+'</td>'+
     '<td>'+(o.email_sent?'✓ sent':'<span class="err">not sent</span>')+'</td>'+

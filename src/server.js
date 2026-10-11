@@ -21,7 +21,9 @@ const FILES = {
   bonus2: ['bonus-2-check-a-mining-claim.pdf', 'Bonus-2-How-to-Check-a-Mining-Claim.pdf'],
   bonus3: ['bonus-3-is-it-gold-card.pdf', 'Bonus-3-Is-It-Gold-ID-Card.pdf'],
   bonus4: ['bonus-4-paydirt-shortcut.pdf', 'Bonus-4-Trip-1-Paydirt-Shortcut.pdf'],
+  familypack: ['family-pack.pdf', 'Junior-Prospector-Family-Pack.pdf'], // order bump: only for orders that bought it
 };
+const BUMP_FILE = 'familypack';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) { console.error('ADMIN_PASSWORD env var is required.'); process.exit(1); }
 
@@ -30,6 +32,18 @@ const app = new Hono();
 
 function siteUrl(c, s) {
   return (s.site_url || new URL(c.req.url).origin).replace(/\/$/, '');
+}
+const cents = (v) => Math.round(Number(v) * 100);
+const hasBump = (order) => String(order?.items || '').split(',').includes(BUMP_FILE);
+function bumpOn(s) {
+  return s.bump_enabled === '1' && cents(s.bump_price) > 0 && existsSync(`${FILES_DIR}/${FILES[BUMP_FILE][0]}`);
+}
+// Which items a captured amount pays for. Accepts the bump price even if the bump was switched off
+// while the buyer was on the checkout page.
+function itemsFor(s, amount) {
+  if (cents(amount) === cents(s.price)) return 'workbook';
+  if (cents(s.bump_price) > 0 && cents(amount) === cents(s.price) + cents(s.bump_price)) return `workbook,${BUMP_FILE}`;
+  return null;
 }
 function downloadLink(c, s, orderId, ttl = 7 * DAY) {
   return `${siteUrl(c, s)}/download?t=${encodeURIComponent(makeToken(`dl:${orderId}`, ttl))}`;
@@ -58,7 +72,10 @@ app.post('/api/e', async (c) => {
 
 app.get('/api/config', (c) => {
   const s = getSettings();
-  return c.json({ clientId: s.paypal_client_id, env: s.paypal_env, price: s.price, currency: s.currency, product: s.product_name, ga: s.ga_id, pixel: s.meta_pixel_id });
+  return c.json({
+    clientId: s.paypal_client_id, env: s.paypal_env, price: s.price, currency: s.currency, product: s.product_name, ga: s.ga_id, pixel: s.meta_pixel_id,
+    bump: bumpOn(s) ? { name: s.bump_name, price: s.bump_price } : null,
+  });
 });
 
 app.post('/api/capture', async (c) => {
@@ -72,14 +89,15 @@ app.post('/api/capture', async (c) => {
   catch (e) { console.error('capture', e.message); return c.json({ error: 'Could not reach PayPal. Please contact support with your receipt.' }, 502); }
 
   const o = summarize(order);
-  if (!o.paid || o.currency !== s.currency || Number(o.amount) !== Number(s.price)) {
-    insertOrder.run(orderID, o.captureId, o.email, o.name, Number(o.amount) || 0, o.currency || s.currency, 'failed');
+  const items = itemsFor(s, o.amount);
+  if (!o.paid || o.currency !== s.currency || !items) {
+    insertOrder.run(orderID, o.captureId, o.email, o.name, Number(o.amount) || 0, o.currency || s.currency, 'failed', items || 'workbook');
     return c.json({ error: 'Payment not completed' }, 402);
   }
-  insertOrder.run(orderID, o.captureId, o.email, o.name, Number(o.amount), o.currency, 'paid');
+  insertOrder.run(orderID, o.captureId, o.email, o.name, Number(o.amount), o.currency, 'paid', items);
 
   if (o.email) {
-    sendDownloadEmail(s, { to: o.email, name: o.name, link: downloadLink(c, s, orderID) })
+    sendDownloadEmail(s, { to: o.email, name: o.name, link: downloadLink(c, s, orderID), bump: hasBump({ items }) })
       .then(() => markEmailSent.run(orderID))
       .catch((e) => console.error('email', orderID, e.message));
   }
@@ -92,8 +110,10 @@ app.get('/api/download', (c) => {
   const orderId = payload.slice(3);
   const order = getOrder.get(orderId);
   if (!order || order.status !== 'paid') return c.text('This order is not active.', 403);
-  const f = FILES[c.req.query('f') || 'workbook'];
+  const key = c.req.query('f') || 'workbook';
+  const f = FILES[key];
   if (!f) return c.text('Unknown file.', 404);
+  if (key === BUMP_FILE && !hasBump(order)) return c.text('The Family Pack is not part of this order.', 403);
   const path = `${FILES_DIR}/${f[0]}`;
   if (!existsSync(path)) return c.text('File not available yet. Please contact support.', 404);
   if (f === FILES.workbook) bumpDownloads.run(orderId);
@@ -105,6 +125,15 @@ app.get('/api/download', (c) => {
       'Cache-Control': 'private, no-store',
     },
   });
+});
+
+// What a download link unlocks, so the download page can list the right files and report the real order value.
+app.get('/api/order', (c) => {
+  const payload = readToken(c.req.query('t'));
+  if (!payload || !payload.startsWith('dl:')) return c.json({ error: 'invalid' }, 403);
+  const order = getOrder.get(payload.slice(3));
+  if (!order || order.status !== 'paid') return c.json({ error: 'inactive' }, 403);
+  return c.json({ items: String(order.items || 'workbook').split(','), amount: order.amount, currency: order.currency }, 200, { 'Cache-Control': 'private, no-store' });
 });
 
 /* ---------- admin ---------- */
@@ -154,7 +183,7 @@ app.post('/admin/api/orders/:id/resend', async (c) => {
   if (!to) return c.json({ error: 'No email on this order' }, 400);
   const s = getSettings();
   try {
-    await sendDownloadEmail(s, { to, name: order.name, link: downloadLink(c, s, order.paypal_order_id) });
+    await sendDownloadEmail(s, { to, name: order.name, link: downloadLink(c, s, order.paypal_order_id), bump: hasBump(order) });
     markEmailSent.run(order.paypal_order_id);
     return c.json({ ok: true });
   } catch (e) { return c.json({ error: e.message }, 500); }
@@ -184,6 +213,8 @@ app.post('/admin/api/settings', async (c) => {
     clean[k] = v;
   }
   if (clean.price && !/^\d+(\.\d{1,2})?$/.test(clean.price)) return c.json({ error: 'Price must be like 17.00' }, 400);
+  if (clean.bump_price && !/^\d+(\.\d{1,2})?$/.test(clean.bump_price)) return c.json({ error: 'Family Pack price must be like 7.00' }, 400);
+  if (clean.bump_enabled && !['0', '1'].includes(clean.bump_enabled)) return c.json({ error: 'Bad Family Pack setting' }, 400);
   if (clean.paypal_env && !['live', 'sandbox'].includes(clean.paypal_env)) return c.json({ error: 'Bad env' }, 400);
   if (clean.mail_method && !['api', 'smtp'].includes(clean.mail_method)) return c.json({ error: 'Bad mail method' }, 400);
   if (clean.ga_id && !/^G-[A-Z0-9]{4,20}$/i.test(clean.ga_id)) return c.json({ error: 'Google Analytics ID must look like G-XXXXXXX' }, 400);

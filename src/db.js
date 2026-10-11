@@ -37,6 +37,11 @@ db.exec(`
   );
 `);
 
+// Orders made before the order bump existed are workbook-only.
+if (!db.prepare('PRAGMA table_info(orders)').all().some((c) => c.name === 'items')) {
+  db.exec("ALTER TABLE orders ADD COLUMN items TEXT NOT NULL DEFAULT 'workbook'");
+}
+
 // Keys ending in "_secret"/"_pass" are stored encrypted.
 const SECRET_KEYS = new Set(['paypal_secret', 'smtp_pass', 'mk_api_token']);
 
@@ -59,6 +64,10 @@ export const DEFAULTS = {
   support_email: 'hello@firstflake.com',
   ga_id: '',
   meta_pixel_id: '',
+  // Order bump shown at checkout (unchecked by default): the Junior Prospector Family Pack.
+  bump_enabled: '1',
+  bump_price: '7.00',
+  bump_name: 'Junior Prospector Family Pack (PDF)',
 };
 
 export function getSettings() {
@@ -80,9 +89,9 @@ export function saveSettings(obj) {
 }
 
 export const insertOrder = db.prepare(`
-  INSERT INTO orders (paypal_order_id, capture_id, email, name, amount, currency, status)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-  ON CONFLICT(paypal_order_id) DO UPDATE SET capture_id = excluded.capture_id, status = excluded.status`);
+  INSERT INTO orders (paypal_order_id, capture_id, email, name, amount, currency, status, items)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  ON CONFLICT(paypal_order_id) DO UPDATE SET capture_id = excluded.capture_id, status = excluded.status, items = excluded.items`);
 export const markEmailSent = db.prepare('UPDATE orders SET email_sent = 1 WHERE paypal_order_id = ?');
 export const bumpDownloads = db.prepare('UPDATE orders SET downloads = downloads + 1 WHERE paypal_order_id = ?');
 export const getOrder = db.prepare('SELECT * FROM orders WHERE paypal_order_id = ?');
@@ -124,6 +133,7 @@ export function stats() {
     today: one(`SELECT COUNT(*) n, COALESCE(SUM(amount),0) sum FROM orders WHERE ${paid} AND date(created_at) = date('now')`),
     month: one(`SELECT COUNT(*) n, COALESCE(SUM(amount),0) sum FROM orders WHERE ${paid} AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')`),
     refunded: one(`SELECT COUNT(*) n, COALESCE(SUM(amount),0) sum FROM orders WHERE status = 'refunded'`),
+    bump: one(`SELECT COUNT(*) n FROM orders WHERE ${paid} AND items LIKE '%familypack%'`),
     daily: db.prepare(`SELECT date(created_at) d, COUNT(*) n, SUM(amount) sum FROM orders WHERE ${paid} AND created_at >= date('now','-29 days') GROUP BY d ORDER BY d`).all(),
   };
 }

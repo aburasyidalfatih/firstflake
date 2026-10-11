@@ -61,6 +61,15 @@ Sumber bonus ada di folder `bonus/` (HTML + CSS). PDF hasilnya disimpan di `priv
 - Render ulang semua PDF dengan `bash bonus/build.sh` (butuh Google Chrome terpasang).
 - Halaman download memakai parameter `f` (workbook, bonus1 sampai bonus4). Daftar file ada di `FILES` dalam `src/server.js`.
 
+## Order bump: Junior Prospector Family Pack
+Di checkout ada kotak tambahan (tidak tercentang secara default) untuk membeli Family Pack seharga $7.
+- Diatur dari `/admin` → Settings → **Order bump: Family Pack** (on/off, harga, nama di struk). Kalau file PDF-nya tidak ada, kotaknya otomatis disembunyikan.
+- Server menerima pembayaran sebesar harga workbook, atau harga workbook + harga Family Pack. Isi order disimpan di kolom `items` (`workbook` atau `workbook,familypack`). Order lama otomatis dianggap `workbook`.
+- File `private/family-pack.pdf` hanya bisa diunduh oleh order yang membelinya (`/api/download?f=familypack`). Halaman download dan email otomatis menampilkan Family Pack untuk order tersebut.
+- Event Purchase di Meta Pixel dan GA4 memakai nilai order sebenarnya ($9 atau $16).
+- Dashboard Orders menampilkan persentase pembeli yang mengambil Family Pack.
+- Sumber PDF ada di `familypack/` (`build.py` + `style.css`, font Fredoka dan Gelasio berlisensi OFL di `familypack/fonts/`). Render ulang dengan `bash familypack/render.sh` (butuh Chrome). Gambar kecil di checkout dibuat ulang dengan `python familypack/mockup.py` (butuh pdftoppm dan Pillow).
+
 ## Workbook utama
 Sumber workbook ada di `workbook/` (generator Python + CSS). PDF hasilnya ditulis ke `private/first-flake-workbook.pdf`.
 - Edit teks atau halaman di `workbook/build.py`, gaya di `workbook/style.css`.
